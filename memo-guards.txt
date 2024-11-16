@@ -1,4 +1,4 @@
-app/config/auth.phpで設定
+◆ app/config/auth.phpで設定
 
 Authentication Guardsの所に
 roleごとにguardを指定する
@@ -29,7 +29,8 @@ Providersのところ
 
 
 Resetting Passwordsのところ
-'passwords' => [
+
+    'passwords' => [
         'users' => [
             'provider' => 'users', // ↑で設定したProvider
             'table' => 'password_reset_tokens',
@@ -54,3 +55,38 @@ Resetting Passwordsのところ
         ],
     ],
 こんな感じ
+
+
+
+
+◆ App\Http\Requests\Auth\LoginRequest.php
+
+ログイン時にGuardをかけるのに設定
+
+
+    public function authenticate(): void
+    {
+        $this->ensureIsNotRateLimited();
+
+        if($this->routeIs('owner.*')) {
+            $guard = 'owners';
+        } elseif ($this->routeIs('admin.*')) {
+            $guard = 'admin';
+        } else {
+            $guard = 'users';
+        }
+
+        // ↑ owners, admin, usersは、config\auth.phpで設定しているguardsの値 ↑
+
+
+        if (! Auth::guard($guard)->attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => trans('auth.failed'),
+            ]);
+        }
+
+        RateLimiter::clear($this->throttleKey());
+    }
+
