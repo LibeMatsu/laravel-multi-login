@@ -30,6 +30,7 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         $this->routes(function () {
+            // frontをすべてjavascriptで作る際はapiを使うこともある
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
