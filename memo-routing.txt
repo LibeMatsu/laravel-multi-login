@@ -1,0 +1,33 @@
+routesの中に
+web.phpを参考にowner.php, admin.phpを作成
+
+require __DIR__.'/auth.php';の記述の箇所は
+同フォルダ内のauth.phpを読み込んでいるところなので、
+auth.phpの中身を張り付けちゃうことで対応
+use文で読み込んでいるものはuser, owner, adminでそれぞれ違うものを使うようにする
+
+
+
+
+app\Providers\RouteServiceProvider.phpで
+ログインした後にリダイレクトするページをそれぞれのrole毎に設定
+
+$this->routes(function () {
+    Route::prefix('admin')
+        ->as('admin.')
+        ->middleware('web')
+        ->group(base_path('routes/admin.php'));
+
+    Route::prefix('owner')
+        ->as('owner.')
+        ->middleware('web')
+        ->group(base_path('routes/owner.php'));
+
+    Route::prefix('/')
+        ->as('user.')
+        ->middleware('web')
+        ->group(base_path('routes/web.php'));
+});
+みたいなのも設定。
+
+
