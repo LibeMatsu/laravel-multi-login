@@ -1,0 +1,4 @@
+app/config/auth.phpで設定
+
+Authentication Guardsの所に
+roleごとにguardを指定する
