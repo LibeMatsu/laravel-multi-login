@@ -1,0 +1,235 @@
+▶▶ 認証 (Guard, Providers)
+
+
+◆ 異なる種類のユーザーを管理するためのモデルを作成
+php artisan make:model Owner -m
+php artisan make:model Admin -m
+php artisan make:model User -m
+
+
+
+◆ ユーザータイプごとに認証ガードを設定
+
+【 ガード 】
+
+■ 認証の管理: ユーザーがログインしているかどうかを確認し、ログインしているユーザーの情報を管理
+■ 認可の管理: 特定のアクションを実行するために、ユーザーが適切な権限を持っているかどうかを確認
+
+
+※ config/auth.php ※
+
+'guards' => [
+    'owner' => [
+        'driver' => 'session',
+        'provider' => 'owner',
+    ],
+    'admin' => [
+        'driver' => 'session',
+        'provider' => 'admins',
+    ],
+    'user' => [
+        'driver' => 'session',
+        'provider' => 'users',
+    ],
+],
+
+
+
+
+◆ ユーザータイプごとに認証プロバイダーを設定
+※ config/auth.php ※
+
+認証プロバイダー ←ユーザーの情報をどこから取得するかを指定する
+（ログイン時にその情報を使ってユーザーを認証する）
+
+'providers' => [
+    'owner' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\Owner::class,
+    ],
+    'admins' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\Admin::class,
+    ],
+    'users' => [
+        'driver' => 'eloquent',
+        'model' => App\Models\User::class,
+    ],
+],
+
+
+
+◆ ログインコントローラーを作成
+
+→ それぞれのユーザータイプごとにログインコントローラーを作成して、ログイン処理を分ける
+
+php artisan make:controller OwnerAuthController
+php artisan make:controller AdminAuthController
+php artisan make:controller UserAuthController
+
+
+
+
+例）
+※ 管理者専用のページにアクセスする際に、管理者としてログインしているかを確認する
+if (Auth::guard('admin')->check()) {
+    // 管理者としてログインしている
+}
+
+
+※ 管理者用のログイン
+if (Auth::guard('admin')->attempt(['email' => $email, 'password' => $password])) {
+    // 管理者としてログイン成功
+}
+
+※ 一般ユーザー用のログイン
+if (Auth::guard('user')->attempt(['email' => $email, 'password' => $password])) {
+    // 一般ユーザーとしてログイン成功
+}
+
+
+※ ガードの指定
+Route::get('/flights', function () {
+    // 認証済みユーザーのみがこのルートにアクセス可能
+})->middleware('auth:admin');
+
+
+
+
+
+
+▶▶ ミドルウェア
+
+
+【 middleware / ミドルウェア 】
+
+↑ リクエストがアプリケーションに到達する前に実行されるコード
+(認証や認可、ログ記録、セキュリティチェックなど、さまざまな処理を行うことができる)
+
+特定のページにアクセスする前に、ユーザーが適切な権限を持っているかを確認したいとき使う。
+
+※ まずガードで管理者として認証されているかを確認し、その後ミドルウェアでさらに細かい権限チェックを行うといったことができる
+
+
+
+◆ ミドルウェアの作成
+php artisan make:middleware CheckAdminRole
+
+↓
+
+public function handle($request, Closure $next)
+{
+    if (Auth::guard('admin')->check() && Auth::user()->role == 'admin') {
+        return $next($request);
+    }
+    return redirect('/');
+}
+
+ミドルウェアをルートに適用することで、特定のページにアクセスする際に管理者であることを確認できる
+
+
+
+
+例）
+※ 管理者専用のページにアクセスする前に、ユーザーが管理者であることを確認する。
+
+public function handle($request, Closure $next)
+{
+    if (Auth::user()->role !== 'admin') {
+        return redirect('/');
+    }
+    return $next($request);
+}
+
+
+
+
+
+
+▶▶ 役割
+
+【 role / ロール 】
+
+ロールを使うことで、ユーザーごとに異なる権限を設定し、特定のアクションを実行できるかどうかを制御することができる
+
+例）
+※ 管理者だけが処理をできるようにする
+if (Auth::user()->role == 'admin') {
+    // 管理者用の処理
+}
+
+
+
+
+
+
+
+▶▶ 認可 (Gate, Policy) 
+Warning! 
+堅牢なLaravelアプリケーションを構築するときは、ポリシーを使用して認可ルールを整理することを検討する必要があります。
+
+
+【 Policy / ポリシー 】
+
+↑ 特定のアクションをユーザーが実行できるかどうかを決めるルール
+
+■ 認可の管理: ユーザーが特定のアクションを実行する権限があるかどうかをチェックする
+■ コードの整理: 認可のロジックをコントローラーやモデルから分離して、コードを整理しやすくする
+
+
+
+◆ ポリシーの作成
+php artisan make:policy なんとかPolicy --model=モデル名
+
+（たとえば、アプリケーションがブログの場合、
+App\Models\Postモデルと
+投稿の作成や更新などのユーザーアクションを認可するためのPostモデルと対応する →App\Policies\PostPolicyがあるでしょう）
+
+
+
+
+◆ ポリシーにルールを定義
+
+例）
+※ 記事の作成者だけがその記事を編集できるようにする
+namespace App\Policies;
+
+use App\Models\Post;
+use App\Models\User;
+
+class PostPolicy
+{
+    /**
+     * 指定した投稿をユーザーが更新可能かを判定
+     */
+    public function update(User $user, Post $post): bool
+    {
+        return $user->id === $post->user_id;
+    }
+}
+
+
+
+
+◆ ポリシーを登録
+※ app/Providers/AuthServiceProvider.php ※
+
+protected $policies = [
+    'App\Models\モデル名' => 'App\Policies\なんとかPolicy',
+];
+
+
+
+
+◆ ポリシーを使う
+※ Controller ※
+
+public function update(Request $request, Post $post)
+{
+    $this->authorize('update', $post);
+
+    // 記事の更新処理
+}
+
+
+
