@@ -1,0 +1,85 @@
+◆ app\Http\Middleware\Authenticate.php
+
+※ 認証されていない場合にリダイレクトする処理を書く ※
+
+namespace App\Http\Middleware;
+
+use Illuminate\Auth\Middleware\Authenticate as Middleware;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
+class Authenticate extends Middleware
+{
+protected $user_route = 'user.login';
+protected $owner_route = 'owner.login';
+protected $admin_route = 'admin.login';
+
+// ↑ RouteServiceProviderで->as('user')とかしたやつ ↑
+
+protected function redirectTo(Request $request): ?string
+    {
+        if (! $request->expectsJson()) {
+            if (Route::is('owner.*')) {
+                return route($this->owner_route);
+            } elseif (Route::is('admin.*')) {
+                return route($this->admin_route);
+            } else {
+                return route($this->user_route);
+            }
+        }
+    }
+
+}
+
+
+
+
+
+
+◆ app\Http\Middleware\RedirectIfAuthenticated.php
+
+※ ログイン済みユーザーがアクセスしてきたらリダイレクトする処理を書く ※
+
+
+namespace App\Http\Middleware;
+
+use App\Providers\RouteServiceProvider;
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
+
+class RedirectIfAuthenticated
+{
+    private const GURAD_USER = 'users';
+    private const GURAD_OWNER = 'owners';
+    private const GURAD_ADMIN = 'admin';
+
+    // ↑ config\auth.phpのAuthentication Guardsで設定したやつ
+
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     */
+    public function handle(Request $request, Closure $next, string ...$guards): Response
+    {
+
+        if (Auth::guard(self::GURAD_USER)->check() && $request->routeIs('user.*')) {
+            return redirect(RouteServiceProvider::HOME);
+        }
+
+        if (Auth::guard(self::GURAD_OWNER)->check() && $request->routeIs('owner.*')) {
+            return redirect(RouteServiceProvider::OWNER_HOME);
+        }
+
+
+        if (Auth::guard(self::GURAD_ADMIN)->check() && $request->routeIs('admin.*')) {
+            return redirect(RouteServiceProvider::ADMIN_HOME);
+        }
+
+        return $next($request);
+    }
+}
+
+
