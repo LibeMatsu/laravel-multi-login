@@ -80,6 +80,16 @@ return [
             'model' => App\Models\User::class,
         ],
 
+        'owners' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Owner::class,
+        ],
+
+        'admin' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class,
+        ],
+
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',
@@ -109,6 +119,22 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => 'password_reset_tokens',
+            //  ↓期限。60日間。
+            'expire' => 60,
+            //  ↓ログインを何回か失敗したときに60秒使えなくする
+            'throttle' => 60,
+        ],
+
+        'owners' => [
+            'provider' => 'owners',
+            'table' => 'owner_password_resets	',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'admin' => [
+            'provider' => 'admin',
+            'table' => 'admin_password_resets	',
             'expire' => 60,
             'throttle' => 60,
         ],
