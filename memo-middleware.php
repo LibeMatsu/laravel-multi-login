@@ -1,4 +1,7 @@
-<?php
+◆ app\Http\Middleware\Authenticate.php
+
+※ 認証されていない場合にリダイレクトする処理を書く ※
+
 
 namespace App\Http\Middleware;
 
@@ -8,14 +11,13 @@ use Illuminate\Support\Facades\Route;
 
 class Authenticate extends Middleware
 {
-    protected $user_route = 'user.login';
-    protected $owner_route = 'owner.login';
-    protected $admin_route = 'admin.login';
+protected $user_route = 'user.login';
+protected $owner_route = 'owner.login';
+protected $admin_route = 'admin.login';
 
-    /**
-     * Get the path the user should be redirected to when they are not authenticated.
-     */
-    protected function redirectTo(Request $request): ?string
+// ↑ RouteServiceProviderで->as('user')とかしたやつ ↑
+
+protected function redirectTo(Request $request): ?string
     {
         if (! $request->expectsJson()) {
             if (Route::is('owner.*')) {
@@ -27,4 +29,5 @@ class Authenticate extends Middleware
             }
         }
     }
+
 }
