@@ -1,0 +1,19 @@
+※ public
+みんなが見られる場所
+最初から使う画像はここ。（だったと思う）
+
+
+※ storage\app\public
+特別な人だけが見られる場所
+フォルダ内の画像はgithubにアップされない
+途中でアップする画像はここ。（だったと思う）
+
+↑ 
+php artisan storage:link
+（public/storageリンクが生成されてpublicから見れるようになる）
+
+
+
+◆ ロゴ表示
+asset('images/logo.png')を
+components/application-logo-blade.phpに記載
