@@ -15,6 +15,8 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased">
+        <div class="text-xs text-center">app.bladeはnavigationの大枠</div>
+
         <div class="min-h-screen bg-gray-100">
             @if(request()->is('admin*'))
                 @include('layouts.admin-navigation')
