@@ -1,5 +1,6 @@
 <x-guest-layout>
     管理者用
+    <div class="text-xs mb-5">admin\login.blade</div>
 
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
