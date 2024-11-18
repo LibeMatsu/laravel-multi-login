@@ -1,4 +1,7 @@
 <x-guest-layout>
+    ユーザー用
+    <div class="text-xs mb-5">user\register.blade</div>
+    
     <form method="POST" action="{{ route('user.register') }}">
         @csrf
 

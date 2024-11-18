@@ -1,4 +1,7 @@
 <x-guest-layout>
+    管理者用
+    <div class="text-xs mb-5">admin\register.blade</div>
+    
     <form method="POST" action="{{ route('admin.password.store') }}">
         @csrf
 

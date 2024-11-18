@@ -1,4 +1,7 @@
 <x-guest-layout>
+    オーナー用
+    <div class="text-xs mb-5">owner\reset-password.blade</div>
+
     <form method="POST" action="{{ route('owner.password.store') }}">
         @csrf
 

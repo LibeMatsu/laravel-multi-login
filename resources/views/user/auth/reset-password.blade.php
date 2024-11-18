@@ -1,4 +1,7 @@
 <x-guest-layout>
+    ユーザー用
+    <div class="text-xs mb-5">user\reset-password.blade</div>
+    
     <form method="POST" action="{{ route('user.password.store') }}">
         @csrf
 
