@@ -15,5 +15,6 @@ php artisan storage:link
 
 
 ◆ ロゴ表示
-asset('images/logo.png')を
-components/application-logo-blade.phpに記載
+components/application-logo-blade.phpに
+asset('images/logo.png') ←public\images\logo.pngってこと
+と記載
