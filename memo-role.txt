@@ -1,0 +1,134 @@
+【 ロールと権限の割り当て 】
+
+
+1. admin_roles テーブル
+
+**役割（ロール）**を管理するテーブル
+
+
+例）administratorというロールを作成
+use Encore\Admin\Auth\Database\Role;
+
+$adminRole = Role::firstOrCreate([
+    'name' => 'administrator',
+    'slug' => 'administrator',
+]);
+
+
+※ Role::firstOrCreate ←指定した条件に一致するレコードが存在しない場合に新しいレコードを作成するメソッド
+※ 同じロールが複数回作成されることを防ぐ
+・存在する場合: 条件に一致する既存のレコードを返す
+・存在しない場合: 新しいレコードを作成し、それを返す
+
+※ slugは、データベース内で一意の識別子
+（nameは一意でなくてもよい。人間が読みやすい表示用の名前。）
+・一意性: slugは一意である必要があるため、データベース内で重複しないように管理できる
+・URLフレンドリー: slugはURLに使いやすい形式であるため、SEO（検索エンジン最適化）にも役立つ
+・簡潔さ: slugは短くて覚えやすい文字列なので、プログラム内で扱いやすい
+
+
+
+
+2. admin_permissions テーブル
+
+権限を管理するテーブル
+
+
+例）dashboardやusersなどの権限を作成
+use Encore\Admin\Auth\Database\Permission;
+
+$permissions = [
+    'dashboard', 
+    'users', 
+    'categories', 
+    'products', 
+    'major-categories', 
+    'shopping-carts'
+    ];
+
+foreach ($permissions as $permission) {
+    Permission::firstOrCreate([
+        'name' => $permission,
+        'slug' => $permission,
+    ]);
+}
+
+
+
+
+3. admin_role_permissions テーブル
+
+ロールと権限の関連付けを管理するテーブル
+ロールに対して権限を割り当てる
+（ロールと権限の関係を管理するための中間テーブル）
+
+
+例）admin_rolesテーブルとadmin_permissionsテーブルの橋渡しをする
+
+admin_rolesテーブル:
+id: 1, name: 'administrator'
+id: 2, name: 'editor'
+
+admin_permissionsテーブル:
+id: 1, name: 'dashboard'
+id: 2, name: 'users'
+id: 3, name: 'categories'
+
+admin_role_permissionsテーブル
+role_id | permission_id
+--------|---------------
+1       | 1
+1       | 2
+1       | 3
+2       | 1
+2       | 3
+
+
+例）
+foreach ($permissions as $permission) {
+    $perm = Permission::where('name', $permission)->first();
+    $adminRole->permissions()->save($perm);
+}
+
+
+
+
+4. admin_users テーブル
+
+ユーザーを管理するテーブル
+
+例）adminというユーザーを作成
+use Encore\Admin\Auth\Database\Administrator;
+
+$adminUser = Administrator::firstOrCreate([
+    'username' => 'admin',
+    'password' => Hash::make('password'),
+    'name'     => 'Administrator',
+]);
+
+
+
+
+5. admin_role_users テーブル
+
+ユーザーとロールの関連付けを管理するテーブル
+ユーザーに対してロールを割り当てる
+
+$adminUser->roles()->save($adminRole);
+
+
+
+
+
+まとめ
+
+ロールの作成: admin_roles テーブルにロールを作成。
+
+権限の作成: admin_permissions テーブルに権限を作成。
+
+ロールと権限の関連付け: admin_role_permissions テーブルにロールと権限を関連付け。
+
+ユーザーの作成: admin_users テーブルにユーザーを作成。
+
+ユーザーとロールの関連付け: admin_role_users テーブルにユーザーとロールを関連付け。
+
