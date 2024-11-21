@@ -1,3 +1,164 @@
+【 ロールと権限のシステムを実装 】
+
+◆ ロールと権限のテーブルを作成するためのマイグレーションを作成
+php artisan make:migration create_roles_and_permissions_tables
+
+
+
+※ database/migrations/xxxx_xx_xx_create_roles_and_permissions_tables.php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateRolesAndPermissionsTables extends Migration
+{
+    public function up()
+    {
+        Schema::create('roles', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->unique();
+            $table->string('slug')->unique();
+            $table->timestamps();
+        });
+
+        Schema::create('permissions', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->unique();
+            $table->string('slug')->unique();
+            $table->timestamps();
+        });
+
+        Schema::create('role_user', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('role_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->timestamps();
+        });
+
+        Schema::create('permission_role', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('permission_id')->constrained()->onDelete('cascade');
+            $table->foreignId('role_id')->constrained()->onDelete('cascade');
+            $table->timestamps();
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('permission_role');
+        Schema::dropIfExists('role_user');
+        Schema::dropIfExists('permissions');
+        Schema::dropIfExists('roles');
+    }
+}
+
+
+
+
+◆ モデルを作成
+php artisan make:model Role
+php artisan make:model Permission
+
+
+※ app/Models/Role.php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Role extends Model
+{
+    use HasFactory;
+
+    protected $fillable = ['name', 'slug'];
+
+    public function permissions()
+    {
+        return $this->belongsToMany(Permission::class);
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
+}
+
+
+※ app/Models/Permission.php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Permission extends Model
+{
+    use HasFactory;
+
+    protected $fillable = ['name', 'slug'];
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class);
+    }
+}
+
+
+
+◆ ユーザーモデルの編集
+
+※ app/Models/User.php
+
+namespace App\Models;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class User extends Authenticatable
+{
+    use Notifiable;
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class);
+    }
+
+    public function hasRole($role)
+    {
+        return $this->roles()->where('slug', $role)->exists();
+    }
+}
+
+
+
+◆ ロールと権限の割り当て
+
+use App\Models\Role;
+use App\Models\Permission;
+use App\Models\User;
+
+// ロールの作成
+$adminRole = Role::create(['name' => 'Administrator', 'slug' => 'administrator']);
+
+// 権限の作成
+$manageUsers = Permission::create(['name' => 'Manage Users', 'slug' => 'manage-users']);
+
+// ロールに権限を割り当て
+$adminRole->permissions()->attach($manageUsers);
+
+// ユーザーにロールを割り当て
+$user = User::find(1); // 1はユーザーID
+$user->roles()->attach($adminRole);
+
+
+
+
+
+
+
+
 【 ロールと権限の割り当て 】
 
 
@@ -119,7 +280,7 @@ $adminUser->roles()->save($adminRole);
 
 
 
-※ AdminUserSeeder.php
+※ 例）AdminUserSeeder.php
 
 <?php
 
@@ -168,6 +329,10 @@ class AdminUserSeeder extends Seeder
 
     }
 }
+
+
+
+※ Role::firstOrCreate← 指定した条件に一致するロールが存在するか確認し、存在しない場合は新しいロールを作成するメソッド
 
 
 
