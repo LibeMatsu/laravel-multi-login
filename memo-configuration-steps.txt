@@ -258,3 +258,13 @@ public function update(Request $request, Post $post)
 
 
 
+
+
+※ GateとPolicyの違い
+Gate: 
+よりシンプルな権限チェックに使う。
+例えば、特定のアクションを実行できるかどうかを簡単にチェックする場合に便利。
+
+Policy: 
+より複雑な権限チェックに使う。
+例えば、特定のモデルに対する操作を細かく制御する場合に便利。

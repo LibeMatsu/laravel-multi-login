@@ -1,0 +1,73 @@
+◆ Policyの作成
+php artisan make:policy ArticlePolicy
+
+
+
+
+◆ Policyの定義
+ルールを定義。
+
+※ app/Policies/ArticlePolicy.php
+namespace App\Policies;
+
+use App\Models\User;
+use App\Models\Article;
+
+class ArticlePolicy
+{
+    // 記事を編集できるかどうかを判断するメソッド
+    public function update(User $user, Article $article)
+    {
+        return $user->id === $article->user_id;
+    }
+}
+
+
+
+
+◆ Policyの登録
+
+※ AuthServiceProviderでポリシーを登録
+namespace App\Providers;
+
+use App\Models\Article;
+use App\Policies\ArticlePolicy;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+
+class AuthServiceProvider extends ServiceProvider
+{
+    protected $policies = [
+        Article::class => ArticlePolicy::class,
+    ];
+
+    public function boot()
+    {
+        $this->registerPolicies();
+    }
+}
+
+
+
+
+◆ Policyの使用
+
+コントローラーやビューでポリシーを使用して、ユーザーがアクションを実行できるかどうかをチェック
+use App\Models\Article;
+
+public function update(Article $article)
+{
+    $this->authorize('update', $article);
+
+    // 記事の更新処理
+}
+
+
+
+
+
+まとめ
+Policyは、ユーザーが特定のアクションを実行できるかどうかを判断するためのルールです。
+作成: php artisan make:policyコマンドでポリシーを作成。
+定義: ポリシーファイルでルールを定義。
+登録: AuthServiceProviderでポリシーを登録。
+使用: コントローラーやビューでポリシーを使用してチェック。
